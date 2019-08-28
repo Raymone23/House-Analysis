@@ -1,19 +1,94 @@
 import pandas as pd
-import numpy as np
 import json
-import re
 from pylab import *
 import matplotlib.pyplot as plt
 
-# 初始化 data
-data = []
-cities = {
-    'cq': '重庆',
-    'cd': '成都',
-}
-
 
 def data_process(city):
+    # 初始化 data
+    data = []
+    cities = {
+        'bd': '保定',
+        'bt': '保亭',
+        'bj': '北京',
+        'chengde': '承德',
+        'cc': '长春',
+        'cz': '滁州',
+        'cs': '长沙',
+        'cm': '澄迈',
+        'cq': '重庆',
+        'cd': '成都',
+        'dl': '大连',
+        'dg': '东莞',
+        'dz': '儋州',
+        'dongfang': '东方',
+        'da': '定安',
+        'dy': '德阳',
+        'dali': '大理',
+        'fs': '佛山',
+        'gz': '广州',
+        'gl': '桂林',
+        'gy': '贵阳',
+        'hd': '邯郸',
+        'hs': '衡水',
+        'hhht': '呼和浩特',
+        'hz': '杭州',
+        'huzhou': '湖州',
+        'hf': '合肥',
+        'hg': '黄冈',
+        'hui': '惠州',
+        'hk': '海口',
+        'jz': '晋中',
+        'jx': '嘉兴',
+        'jn': '济南',
+        'km': '昆明',
+        'lf': '廊坊',
+        'ly': '龙岩',
+        'lg': '临高',
+        'ld': '乐东',
+        'ls': '陵水',
+        'leshan': '乐山',
+        'ms': '眉山',
+        'nj': '南京',
+        'nt': '南通',
+        'nb': '宁波',
+        'nc': '南昌',
+        'nn': '南宁',
+        'qhd': '秦皇岛',
+        'quanzhou': '泉州',
+        'qd': '青岛',
+        'qy': '清远',
+        'qh': '琼海',
+        'qz': '琼中',
+        'sjz': '石家庄',
+        'sy': '沈阳',
+        'sh': '上海',
+        'su': '苏州',
+        'sx': '绍兴',
+        'sz': '深圳',
+        'san': '三亚',
+        'tj': '天津',
+        'ty': '太原',
+        'wx': '无锡',
+        'weihai': '威海',
+        'wh': '武汉',
+        'wzs': '五指山',
+        'wc': '文昌',
+        'wn': '万宁',
+        'xt': '邢台',
+        'xz': '徐州',
+        'xm': '厦门',
+        'xn': '咸宁',
+        'xsbn': '西双版纳',
+        'xa': '西安',
+        'yt': '烟台',
+        'zjk': '张家口',
+        'zj': '镇江',
+        'zhangzhou': '漳州',
+        'zz': '郑州',
+        'zh': '珠海',
+        'zs': '中山'
+    }
     # 读取文件
     with open('D://Code/House Analysis/{}.json'.format(city), 'r', encoding='utf-8') as f:
         for line in f.readlines():
@@ -29,7 +104,8 @@ def data_process(city):
                 '绿化率': '绿化率（%）'}
     df = df.reindex(columns=new_col).rename(columns=col_name)
 
-    # 区域位置数据处理，去掉城市，只保留区县
+    # 区域位置数据处理，去掉城市，只保留区县，对于 NA 的，直接去掉
+    df = df[df['区域位置'].notnull()]
     df['区域位置'] = df['区域位置'].map(lambda x: str(x).split('-')[1])
 
     # 价格处理，利用正则表达式数字，价格未定、只写了总价的不具有可比性，以 NA 填充
@@ -47,7 +123,7 @@ def data_process(city):
     df['物业费 (元/平/月)'] = no_na.map(lambda x: np.array(list(map(float, x))).mean())
 
     # 将容积率、绿化率转换为数字
-    df['容积率'] = df['容积率'].map(lambda x: float(x))
+    df['容积率'] = df['容积率'].map(lambda x: float(x) if x != '暂无信息' else None)
     df['绿化率（%）'] = df['绿化率（%）'].map(lambda x: float(x[:-1]) if x != '暂无信息' else None)
 
     df.to_csv('Processed_{}.csv'.format(city.upper()), encoding='utf-8-sig')
@@ -59,15 +135,15 @@ def data_process(city):
     # 区域楼盘数与均价
     area = df['区域位置'].value_counts()
     plt.rc('figure', figsize=(8, 6))
-    plt.rc('font', size=10)
+    plt.rc('font', size=8)
     # 设置绘图区域
     fig, axes1 = plt.subplots(1, 1)
     # 图片命名
-    axes1.set_title('重庆各区楼盘数量及均价图', fontsize=16)
+    axes1.set_title('{}各区楼盘数量及均价图'.format(cities[city]), fontsize=16)
     # 绘制各区楼盘数量
     axes1.bar(x=area.index, height=area.values, label='各区楼盘数', color='k', alpha=0.3)
     # x 轴标签旋转 45 度
-    axes1.set_xticklabels(area.index, rotation=45)
+    axes1.set_xticklabels(area.index, rotation=60)
     axes1.set_xlabel('区域')
     axes1.set_ylabel('楼盘数量')
     x = np.arange(len(area))
@@ -83,7 +159,7 @@ def data_process(city):
     axes2.set_ylabel('均价（元/平）')
     # 设置均价值标签
     y1 = np.array(price.values)
-    for a,b in zip(x,y1):
+    for a, b in zip(x, y1):
         plt.text(a, b+0.1, '%.0f' % b, fontsize=8, horizontalalignment='center', verticalalignment='bottom')
     # 绘制全市均价线
     average_price = df['价格 (元/平)'].mean()
@@ -115,16 +191,16 @@ def data_process(city):
             # 绘制指标
             axes[i, j].bar(x=values[k].index, height=values[k].values.T[0], color='k', alpha=0.3)
             # x 轴标签旋转 45 度
-            axes[i, j].set_xticklabels(values[k].index, rotation=45)
+            axes[i, j].set_xticklabels(values[k].index, rotation=90)
             axes[i, j].set_xlabel('区域')
             axes[i, j].set_ylabel(values[k].columns[0])
             axes[i, j].set_title('{}各区域楼盘平均{}对比'.format(cities[city], keys[k]))
             x = np.arange(len(values[k]))
             y = np.array(values[k].values)
-            for a,b in zip(x,y):
+            for a, b in zip(x, y):
                 axes[i, j].text(a, b+0.05, '%.0f' % b, ha='center', va= 'bottom',fontsize=8)
             k += 1
-    plt.subplots_adjust(hspace = 0.3)
+    plt.subplots_adjust(hspace=0.5)
     plt.savefig('{}各区域楼盘产权、物业费、容积率及绿化率.png'.format(cities[city]), dpi=400, bbox_inches='tight')
     plt.close()
     print('Figure saved')
