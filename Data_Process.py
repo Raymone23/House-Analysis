@@ -1,12 +1,10 @@
 import pandas as pd
-import json
+import pymongo
 from pylab import *
 import matplotlib.pyplot as plt
 
 
 def data_process(city):
-    # 初始化 data
-    data = []
     cities = {
         'bd': '保定',
         'bt': '保亭',
@@ -89,13 +87,16 @@ def data_process(city):
         'zh': '珠海',
         'zs': '中山'
     }
-    # 读取文件
-    with open('D://Code/House Analysis/{}.json'.format(city), 'r', encoding='utf-8') as f:
-        for line in f.readlines():
-            data.extend(json.loads(line))
+    # 链接数据库
+    client = pymongo.MongoClient(host='localhost', port=27017)
+    db = client.house
+    collection = db[city]
+    data = []
+    for item in collection.find():
+        del item['_id']
+        data.append(item)
 
-    # 转换为 DataFrame
-    df = pd.DataFrame(data, index=(range(1, len(data) + 1)))
+    df = pd.DataFrame(data)
 
     # 索引处理
     df.index.name = 'No'
