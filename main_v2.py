@@ -1,8 +1,8 @@
 import threading
 from time import ctime
 from atexit import register
-from Data_Process_new import data_process
-from house_city_common import *
+from all_city.house_city_common_sql import *
+from all_city.Data_Process_sql import data_process
 
 # 房屋类型
 HOUSE_CLASS = {
@@ -105,14 +105,16 @@ CITIES = {
 }
 PAGES = range(1, 51)
 
+# 数据表表头
+LIST = ["参考价格", "区域位置", "开发商", "绿化率", "容积率", "产权年限", "物业公司", "物业费", "楼盘名称"]
+HEAD = ' VARCHAR(255), '.join(LIST) + ' VARCHAR(255), PRIMARY KEY(楼盘名称)'
+
 
 def main():
     my_house_class = HOUSE_CLASS['住宅']
-    # 文件初始化
-    with open(city + '.json', 'w', encoding='utf-8') as f:
-        pass
     base_url = 'https://{}.fang.lianjia.com/loupan/'.format(city)
     print('Started at:{}'.format(ctime()))
+    create_db(city, HEAD)
     for page in PAGES:
         threading.Thread(target=get_and_save, args=(page, base_url, city, my_house_class, HEADERS)).start()
 
