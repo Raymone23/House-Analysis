@@ -1,5 +1,5 @@
 import pandas as pd
-import json
+import pymysql
 from pylab import *
 import matplotlib.pyplot as plt
 
@@ -89,13 +89,12 @@ def data_process(city):
         'zh': '珠海',
         'zs': '中山'
     }
-    # 读取文件
-    with open('D://Code/House Analysis/{}.json'.format(city), 'r', encoding='utf-8') as f:
-        for line in f.readlines():
-            data.extend(json.loads(line))
-
-    # 转换为 DataFrame
-    df = pd.DataFrame(data, index=(range(1, len(data) + 1)))
+    # 链接数据库
+    db = pymysql.connect(host='localhost', user='root', password='yeswedid631,,', port=3306, db='house')
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM {}'.format(city))
+    rows = cursor.fetchall()
+    df = pd.DataFrame(list(rows), columns=[x[0] for x in cursor.description])
 
     # 索引处理
     df.index.name = 'No'
