@@ -1,5 +1,5 @@
 import requests
-import json
+import pymongo
 from bs4 import BeautifulSoup
 
 
@@ -17,7 +17,7 @@ def get_name_dic(url, headers):
     name_dic = {}
     for item in selected:
         name_dic[item.string] = item['href'][8:]
-        print('code of {} getted.'.format(item.string))
+        # print('code of {} getted.'.format(item.string))
     return name_dic
 
 
@@ -30,8 +30,8 @@ def get_info(url, headers):
     for li in lis:
         if li.select('.label')[0].text in my_keys:
             label = li.select('.label')[0].text.replace('：', '')
-            print(label)
-            print(li.select('.label-val'))
+            # print(label)
+            # print(li.select('.label-val'))
             if li.select('.label-val'):
                 value = li.select('.label-val')[0].text.strip()
             else:
@@ -39,28 +39,29 @@ def get_info(url, headers):
         else:
             continue
         infos[label] = value
-        print('info getted')
+        # print('info getted')
     return infos
 
 
-def save_to_json(data, name='data'):
-    results = json.dumps(data, ensure_ascii=False)
-    with open(name + '.json', 'a+', encoding='utf-8') as f:
-        f.write(results)
-        f.write('\n')
+def save_to_db(data, name='data'):
+    # 连接数据库
+    client = pymongo.MongoClient(host='localhost', port=27017)
+    db = client.house
+    collection = db[name]
+    collection.insert_many(data)
+    print('Data saved')
     return None
 
 
 def get_and_save(page, base_url, filename, house_class, headers):
+    # print(page)
     page_info = []
-    print(page)
     list_url = '{base}{house}pg{page}'.format(base=base_url, house=house_class, page=page)
     name_dic = get_name_dic(list_url, headers)
     for name, code in name_dic.items():
-        print(name)
+        # print(name)
         detail_url = base_url + code + 'xiangqing/'
         my_info = get_info(detail_url, headers)
         my_info['楼盘名称'] = name
         page_info.append(my_info)
-    save_to_json(page_info, name=filename)
-    print('Page {} saved'.format(page))
+    save_to_db(page_info, name=filename)

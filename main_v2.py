@@ -1,8 +1,8 @@
 import threading
 from time import ctime
 from atexit import register
-from Data_Process_new import data_process
-from house_city_common import *
+from all_city_mongo.house_city_common_mongo import *
+from all_city_mongo.Data_Process_mongo import data_process
 
 # 房屋类型
 HOUSE_CLASS = {
@@ -108,9 +108,6 @@ PAGES = range(1, 51)
 
 def main():
     my_house_class = HOUSE_CLASS['住宅']
-    # 文件初始化
-    with open(city + '.json', 'w', encoding='utf-8') as f:
-        pass
     base_url = 'https://{}.fang.lianjia.com/loupan/'.format(city)
     print('Started at:{}'.format(ctime()))
     for page in PAGES:
